@@ -271,11 +271,11 @@ function treeFromCsvTextArea() {
     parentKey = columns[lastUsedColumn];
     lastUsedColumn += 1;
   }
-  if (!columns.includes(colorKey)) {
+  if (!columns.includes(colorKey) && colorKey !== 'none') {
     colorKey = columns[lastUsedColumn];
     lastUsedColumn += 1;
   }
-  if (!columns.includes(specialKey)) {
+  if (!columns.includes(specialKey) && specialKey !== 'none') {
     specialKey = columns[lastUsedColumn];
     lastUsedColumn += 1;
   }
@@ -299,7 +299,7 @@ function treeFromCsvTextArea() {
   console.log('got rootNode =', rootNode);
   console.log(idKey);
 
-  function updateSelect(id, initialValue, updateFn) {
+  function updateSelect(id, initialValue, updateFn, includeNone) {
     // update the column selects
     const select = d3.select(`#${id}`).on('change', function() {
       updateFn(this.value);
@@ -317,12 +317,26 @@ function treeFromCsvTextArea() {
       .property('value', d => d)
       .text(d => d);
 
+    if (includeNone) {
+      select
+        .append('option')
+        .text('none')
+        .property('value', 'none')
+        .lower();
+    }
+
     select.property('value', initialValue);
   }
   updateSelect('id-key-select', idKey, value => (idKey = value));
   updateSelect('parent-key-select', parentKey, value => (parentKey = value));
-  updateSelect('color-key-select', colorKey, value => (colorKey = value));
-  updateSelect('special-key-select', specialKey, value => (specialKey = value));
+  updateSelect('color-key-select', colorKey, value => (colorKey = value), true);
+  updateSelect(
+    'special-key-select',
+    specialKey,
+    value => (specialKey = value),
+    true
+  );
+
   d3.select('#width-input').on('change', function() {
     updateDimensions(+this.value, height);
     treeFromCsvTextArea();
@@ -339,7 +353,12 @@ function treeFromCsvTextArea() {
     .map(d => d.data[colorKey])
     .filter((d, i, a) => a.indexOf(d) === i)
     .sort();
-  colorScale = d3.scaleOrdinal(d3.schemeSet1).domain(colorDomain);
+
+  let scheme = d3.schemeSet1;
+  if (colorDomain.length === 1) {
+    scheme = ['#000'];
+  }
+  colorScale = d3.scaleOrdinal(scheme).domain(colorDomain);
   console.log('colorDomain', colorDomain);
   console.log('colorScale', colorScale);
 }
