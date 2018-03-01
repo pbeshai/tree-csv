@@ -1,0 +1,113 @@
+body {
+  padding: 1em;
+}
+
+
+#csv-text-input {
+  width: 600px;
+  height: 300px;
+  font-size: 12px;
+}
+
+.link {
+  stroke-width: 2px;
+  stroke: #000;
+}
+
+.node {
+  fill: #000;
+  stroke: none;
+
+  &.highlighted {
+    stroke-width: 2px;
+    stroke: tomato;
+  }
+  &.special {
+    stroke-width: 3px;
+    stroke: #000;
+
+    &.highlighted {
+      stroke: tomato;
+    }
+  }
+
+
+}
+
+.vis-container {
+  position: relative;
+}
+
+.legend-swatch {
+  width: 0.8em;
+  height: 0.8em;
+  display: inline-block;
+  margin-right: 0.2em;
+}
+
+.legend-item {
+  margin-right: 1em;
+}
+
+.csv-input-area > button {
+  display: block;
+}
+
+.csv-input-area {
+  background: #eee;
+  padding: 0.5em;
+  margin-bottom: 1em;
+}
+
+.controls {
+  margin-bottom: 1em;
+  background: #eee;
+  padding: 0.5em 0.5em 0;
+
+  .form-control {
+    display: inline-block;
+    margin-right: 1em;
+    margin-bottom: 0.5em;
+
+    label {
+      margin-bottom: 0;
+    }
+  }
+}
+
+
+.highlight-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccc;
+}
+
+
+.node-table {
+  font-size: 12px;
+  width: 300px;
+  table-layout: fixed;
+
+  tr:nth-child(2n) {
+    background: rgba(240, 240, 240, 0.9);
+  }
+
+  td.key {
+    font-weight: 500;
+    width: 90px;
+  }
+
+  td.value {
+    width: 230px;
+  }
+
+  .color-swatch {
+    width: 0.8em;
+    height: 0.8em;
+    display: inline-block;
+    margin-left: 0.4em;
+  }
+}

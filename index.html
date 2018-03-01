@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="bootstrap-reboot.css" />
+    <link rel="stylesheet" href="dist_main.css" />
+    <title>Tree from CSV</title>
+  </head>
+  <body>
+    <div id="root">
+      <h1>Tree from CSV</h1>
+      <div class="csv-input-area">
+        <textarea id="csv-text-input">Source,User,Text,Target,Emotion,Is_Influencer
+1,Bridgit,Hello,,Sad,1
+2,Jack,Hi,1,Happy,0
+3,Joe,Blah!,1,Fear,0
+4,Jane,Boo!,2,Disgust,0
+5,Bridgit,Bloo?,3,Happy,1</textarea>
+        <button id="read-csv-btn">Read CSV Data</button>
+      </div>
+      <div class="controls">
+        <div class="form-control">
+          <label>ID Column</label>
+          <select id="id-key-select"></select>
+        </div>
+        <div class="form-control">
+          <label>Parent Column</label>
+          <select id="parent-key-select"></select>
+        </div>
+        <div class="form-control">
+          <label>Color Column</label>
+          <select id="color-key-select"></select>
+        </div>
+        <div class="form-control">
+          <label>Special Column</label>
+          <select id="special-key-select"></select>
+        </div>
+      </div>
+      <div class='legend'></div>
+      <div class='vis-container'></div>
+    </div>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="dist_script.js"></script>
+  </body>
+</html>
