@@ -18,8 +18,8 @@ const queryParams = window.location.search
     return params;
   }, {});
 
-const width = queryParams.width ? +queryParams.width : 800;
-const height = queryParams.height ? +queryParams.height : 800;
+let width = queryParams.width ? +queryParams.width : 800;
+let height = queryParams.height ? +queryParams.height : 800;
 
 // padding around the chart where axes will go
 const padding = {
@@ -30,8 +30,17 @@ const padding = {
 };
 
 // inner chart dimensions, where the dots are plotted
-const plotAreaWidth = width - padding.left - padding.right;
-const plotAreaHeight = height - padding.top - padding.bottom;
+let plotAreaWidth = width - padding.left - padding.right;
+let plotAreaHeight = height - padding.top - padding.bottom;
+
+function updateDimensions(w, h) {
+  width = w;
+  height = h;
+
+  // inner chart dimensions, where the dots are plotted
+  plotAreaWidth = width - padding.left - padding.right;
+  plotAreaHeight = height - padding.top - padding.bottom;
+}
 
 // radius of points in the scatterplot
 const pointRadius = 5;
@@ -115,6 +124,8 @@ function renderHighlight() {
     x += hMargin;
   }
 
+  x = Math.max(0, x);
+
   console.log(highlightNode, x, y);
   highlightContainer.style('transform', `translate(${x}px, ${y}px)`);
 }
@@ -154,12 +165,10 @@ function renderTree() {
 
   // initialize main SVG
   const svg = rootContainer.select('svg').empty()
-    ? rootContainer
-        .select('.vis-container')
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height)
+    ? rootContainer.select('.vis-container').append('svg')
     : rootContainer.select('svg');
+
+  svg.attr('width', width).attr('height', height);
 
   // the main <g> where all the chart content goes inside
   const g = svg.select('.root-g').empty()
@@ -251,6 +260,27 @@ function treeFromCsvTextArea() {
   const text = d3.select('#csv-text-input').property('value');
   csvData = d3.csvParse(text);
 
+  // choose sequential values if key is not found in the csv
+  let lastUsedColumn = 0;
+  const { columns } = csvData;
+  if (!columns.includes(idKey)) {
+    idKey = columns[lastUsedColumn];
+    lastUsedColumn += 1;
+  }
+  if (!columns.includes(parentKey)) {
+    parentKey = columns[lastUsedColumn];
+    lastUsedColumn += 1;
+  }
+  if (!columns.includes(colorKey)) {
+    colorKey = columns[lastUsedColumn];
+    lastUsedColumn += 1;
+  }
+  if (!columns.includes(specialKey)) {
+    specialKey = columns[lastUsedColumn];
+    lastUsedColumn += 1;
+  }
+
+  // try to construct the tree
   try {
     const stratifier = d3
       .stratify()
@@ -269,66 +299,40 @@ function treeFromCsvTextArea() {
   console.log('got rootNode =', rootNode);
   console.log(idKey);
 
-  // update the column selects
-  d3
-    .select('#id-key-select')
-    .on('change', function() {
-      idKey = this.value;
+  function updateSelect(id, initialValue, updateFn) {
+    // update the column selects
+    const select = d3.select(`#${id}`).on('change', function() {
+      updateFn(this.value);
       treeFromCsvTextArea();
       render();
-    })
-    .selectAll('option')
-    .data(csvData.columns)
-    .enter()
-    .append('option')
-    .property('value', d => d)
-    .text(d => d);
-  d3.select('#id-key-select').property('value', idKey);
+    });
 
-  d3
-    .select('#parent-key-select')
-    .on('change', function() {
-      parentKey = this.value;
-      treeFromCsvTextArea();
-      render();
-    })
-    .selectAll('option')
-    .data(csvData.columns)
-    .enter()
-    .append('option')
-    .property('value', d => d)
-    .text(d => d);
-  d3.select('#parent-key-select').property('value', parentKey);
+    const optionBinding = select.selectAll('option').data(csvData.columns);
 
-  d3
-    .select('#color-key-select')
-    .on('change', function() {
-      colorKey = this.value;
-      treeFromCsvTextArea();
-      render();
-    })
-    .selectAll('option')
-    .data(csvData.columns)
-    .enter()
-    .append('option')
-    .property('value', d => d)
-    .text(d => d);
-  d3.select('#color-key-select').property('value', colorKey);
+    optionBinding.exit().remove();
+    optionBinding
+      .enter()
+      .append('option')
+      .merge(optionBinding)
+      .property('value', d => d)
+      .text(d => d);
 
-  d3
-    .select('#special-key-select')
-    .on('change', function() {
-      specialKey = this.value;
-      treeFromCsvTextArea();
-      render();
-    })
-    .selectAll('option')
-    .data(csvData.columns)
-    .enter()
-    .append('option')
-    .property('value', d => d)
-    .text(d => d);
-  d3.select('#special-key-select').property('value', specialKey);
+    select.property('value', initialValue);
+  }
+  updateSelect('id-key-select', idKey, value => (idKey = value));
+  updateSelect('parent-key-select', parentKey, value => (parentKey = value));
+  updateSelect('color-key-select', colorKey, value => (colorKey = value));
+  updateSelect('special-key-select', specialKey, value => (specialKey = value));
+  d3.select('#width-input').on('change', function() {
+    updateDimensions(+this.value, height);
+    treeFromCsvTextArea();
+    render();
+  });
+  d3.select('#height-input').on('change', function() {
+    updateDimensions(width, +this.value);
+    treeFromCsvTextArea();
+    render();
+  });
 
   const colorDomain = rootNode
     .descendants()

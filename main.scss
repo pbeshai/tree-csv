@@ -9,6 +9,11 @@ body {
   font-size: 12px;
 }
 
+#width-input,#height-input {
+  width: 3.4em;
+  text-align: right;
+}
+
 .link {
   stroke-width: 2px;
   stroke: #000;
