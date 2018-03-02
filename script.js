@@ -8,6 +8,7 @@ const specialSizeFactor = 1.6;
 let colorScale = d3.scaleOrdinal();
 let highlightNode = null;
 let colorRangeOverrides = ['red'];
+let darkMode = false;
 
 const queryParams = window.location.search
   .substring(1)
@@ -48,6 +49,11 @@ const pointRadius = 5;
 
 // select the root container where the chart will be added
 const rootContainer = d3.select('#root');
+
+d3.select('#dark-mode').on('change', () => {
+  darkMode = !darkMode;
+  d3.select('body').classed('dark-mode', darkMode);
+});
 
 function render() {
   renderColorSchemeSelector(rootNode.descendants().map(d => d.data), colorKey);

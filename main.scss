@@ -2,6 +2,25 @@ body {
   padding: 1em;
 }
 
+body.dark-mode {
+  background: #000;
+  color: #f4f4f4;
+
+  .csv-input-area,
+  .controls {
+    background: #333;
+  }
+
+  .node-table {
+    color: #212529;
+  }
+
+  .node.special {
+    stroke: #fff;
+  }
+}
+
+
 
 #csv-text-input {
   width: 600px;
@@ -126,4 +145,12 @@ body {
     margin-left: 0.4em;
     border: 1px solid rgba(0, 0, 0, 0.5);
   }
+}
+
+h1 {
+  display: inline-block;
+}
+
+.dark-mode-label {
+  margin-left: 2em;
 }
