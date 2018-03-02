@@ -17,6 +17,10 @@ body.dark-mode {
 
   .node.special {
     stroke: #fff;
+
+    &.highlighted {
+      stroke: tomato;
+    }
   }
 }
 
