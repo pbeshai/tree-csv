@@ -154,3 +154,17 @@ h1 {
 .dark-mode-label {
   margin-left: 2em;
 }
+
+
+#error-message {
+  background: #fee;
+  border: 1px solid #c00;
+  margin-bottom: 1em;
+  padding: 0.3em 0.6em;
+  font-weight: bold;
+
+  .error-details {
+    font-size: 0.8em;
+    font-weight: 400;
+  }
+}

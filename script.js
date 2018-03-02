@@ -460,8 +460,25 @@ function treeFromCsvTextArea() {
       .id(d => d[idKey])
       .parentId(d => d[parentKey]);
     rootNode = stratifier(csvData);
+    d3.select('#error-message').style('display', 'none');
   } catch (e) {
-    alert('Error occurred making tree: ' + e);
+    console.error(e);
+    const errorMissingMatch = e.message.match(/^missing: (.*)/);
+    let errorMessage = e.message;
+    if (errorMissingMatch) {
+      errorMessage = `Could not find parent node with ID "${errorMissingMatch[1]}". Did you select the right Parent column? It is currently set to ${parentKey}.`;
+    } else if (e.message === 'no root') {
+      errorMessage = `Could not find a node with no parent. The parent ID column (currently ${parentKey}) should be empty for the root node of the tree.`;
+    } else if (e.message === 'multiple roots') {
+      errorMessage = `Multiple nodes had no parent set. There can only be one root node. Ensure each node has a parent ID besides the root. The current parent column is ${parentKey}.`;
+    } else if (e.message === 'cycle') {
+      errorMessage = `Detected a cycle in the tree. Inspect parent IDs to ensure no cycles exist in the data. The current parent ID column is ${parentKey}.`;
+    }
+    d3
+      .select('#error-message')
+      .style('display', '')
+      .select('.error-details')
+      .text(errorMessage);
   }
 
   // run tree layout
