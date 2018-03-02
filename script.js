@@ -50,8 +50,8 @@ const pointRadius = 5;
 // select the root container where the chart will be added
 const rootContainer = d3.select('#root');
 
-d3.select('#dark-mode').on('change', () => {
-  darkMode = !darkMode;
+d3.select('#dark-mode').on('change', function() {
+  darkMode = this.checked;
   d3.select('body').classed('dark-mode', darkMode);
 });
 
