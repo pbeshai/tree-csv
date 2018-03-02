@@ -118,7 +118,9 @@ function renderColorSchemeSelector(data, colorKey) {
     if (uniqueValues.length <= 9) {
       scaleType = 'ordinal';
       // colorScheme = d3.schemeBlues[Math.max(3, uniqueValues.length)];
-      colorScheme = uniqueValues.map(d => colorInterpolator((d - min) / max));
+      colorScheme = uniqueValues.map(d =>
+        colorInterpolator((d - min) / (max - min))
+      );
     } else {
       scaleType = 'sequential';
       colorDomain = d3.extent(uniqueValues);
@@ -195,12 +197,13 @@ function renderHighlight() {
   const highlightRowHtml = Object.keys(data)
     .map(
       key =>
-        `<tr><td class='key'>${key}</td><td class='value'>${data[key]}${key ===
-        colorKey
-          ? `<span class='color-swatch' style='background: ${colorScale(
-              data[key]
-            )}'></span>`
-          : ''}</td></tr>`
+        `<tr><td class='key'>${key}</td><td class='value'>${data[key]}${
+          key === colorKey
+            ? `<span class='color-swatch' style='background: ${colorScale(
+                data[key]
+              )}'></span>`
+            : ''
+        }</td></tr>`
     )
     .join('');
 
@@ -472,13 +475,23 @@ function treeFromCsvTextArea() {
     const errorMissingMatch = e.message.match(/^missing: (.*)/);
     let errorMessage = e.message;
     if (errorMissingMatch) {
-      errorMessage = `Could not find parent node with ID "${errorMissingMatch[1]}". Did you select the right Parent column? It is currently set to ${parentKey}.`;
+      errorMessage = `Could not find parent node with ID "${
+        errorMissingMatch[1]
+      }". Did you select the right Parent column? It is currently set to ${
+        parentKey
+      }.`;
     } else if (e.message === 'no root') {
-      errorMessage = `Could not find a node with no parent. The parent ID column (currently ${parentKey}) should be empty for the root node of the tree.`;
+      errorMessage = `Could not find a node with no parent. The parent ID column (currently ${
+        parentKey
+      }) should be empty for the root node of the tree.`;
     } else if (e.message === 'multiple roots') {
-      errorMessage = `Multiple nodes had no parent set. There can only be one root node. Ensure each node has a parent ID besides the root. The current parent column is ${parentKey}.`;
+      errorMessage = `Multiple nodes had no parent set. There can only be one root node. Ensure each node has a parent ID besides the root. The current parent column is ${
+        parentKey
+      }.`;
     } else if (e.message === 'cycle') {
-      errorMessage = `Detected a cycle in the tree. Inspect parent IDs to ensure no cycles exist in the data. The current parent ID column is ${parentKey}.`;
+      errorMessage = `Detected a cycle in the tree. Inspect parent IDs to ensure no cycles exist in the data. The current parent ID column is ${
+        parentKey
+      }.`;
     }
     d3
       .select('#error-message')
