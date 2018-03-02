@@ -215,19 +215,25 @@ function renderHighlight() {
     height: hHeight,
   } = highlightContainer.node().getBoundingClientRect();
 
+  // use height from vis container
+  const { width: containerWidth, height: containerHeight } = rootContainer
+    .select('.vis-container')
+    .node()
+    .getBoundingClientRect();
+
   let { x, y } = highlightNode;
   x += padding.left;
   y += padding.top;
   const hMargin = 5;
 
-  if (y + hHeight > height) {
+  if (y + hHeight > containerHeight) {
     y -= hHeight;
     y -= hMargin;
   } else {
     y += hMargin;
   }
 
-  if (x + hWidth > width) {
+  if (x + hWidth > containerWidth) {
     x -= hWidth;
     x -= hMargin;
   } else {
