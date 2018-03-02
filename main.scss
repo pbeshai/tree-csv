@@ -44,14 +44,24 @@ body {
 }
 
 .legend-swatch {
-  width: 0.8em;
-  height: 0.8em;
+  width: 2em;
+  height: 1em;
   display: inline-block;
   margin-right: 0.2em;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+
 }
 
 .legend-item {
   margin-right: 1em;
+
+  &.can-override .legend-swatch {
+    display: none;
+  }
+
+  &.no-override .legend-item-input {
+    display: none;
+  }
 }
 
 .csv-input-area > button {
@@ -114,5 +124,6 @@ body {
     height: 0.8em;
     display: inline-block;
     margin-left: 0.4em;
+    border: 1px solid rgba(0, 0, 0, 0.5);
   }
 }

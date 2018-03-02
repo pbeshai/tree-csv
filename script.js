@@ -7,6 +7,7 @@ let specialKey = 'Is_Influencer';
 const specialSizeFactor = 1.6;
 let colorScale = d3.scaleOrdinal();
 let highlightNode = null;
+let colorRangeOverrides = ['red'];
 
 const queryParams = window.location.search
   .substring(1)
@@ -49,10 +50,113 @@ const pointRadius = 5;
 const rootContainer = d3.select('#root');
 
 function render() {
+  renderColorSchemeSelector(rootNode.descendants().map(d => d.data), colorKey);
   renderControls();
   renderLegend();
   renderTree();
   renderHighlight();
+}
+
+function getTypeFromValues(values) {
+  if (values.length) {
+    let allNumbers = true;
+
+    for (let value of values) {
+      if (allNumbers && isNaN(parseFloat(value))) {
+        allNumbers = false;
+      }
+    }
+
+    if (allNumbers) {
+      return 'number';
+    }
+  }
+
+  // default to string
+  return 'string';
+}
+
+function renderColorSchemeSelector(data, colorKey) {
+  let colorData = data.map(d => d[colorKey]).filter(d => d != null && d !== '');
+  const dataType = getTypeFromValues(colorData);
+
+  let scaleType = 'ordinal';
+  // make the data the right type and sort it
+  if (dataType === 'number') {
+    colorData = colorData.map(d => parseFloat(d));
+    colorData.sort((a, b) => a - b);
+  } else {
+    colorData.sort();
+  }
+
+  const uniqueValues = colorData.filter((d, i, a) => a.indexOf(d) === i);
+  let colorDomain = uniqueValues;
+
+  let colorScheme = d3.schemeSet1;
+  let colorInterpolator = d3.interpolateRdBu;
+
+  if (dataType === 'number') {
+    const [min, max] = d3.extent(uniqueValues);
+    let colorInterpolatorFn = d3.interpolateBlues;
+    if (min < 0 && max > 0) {
+      colorInterpolatorFn = d3.interpolateRdBu;
+    }
+    // colorInterpolatorFn = d3.interpolateRdBu;
+    const colorInterpolatorLimiterScale = d3
+      .scaleLinear()
+      .domain([0, 1])
+      .range([0.15, 1 - 0.15]);
+    colorInterpolator = k =>
+      colorInterpolatorFn(colorInterpolatorLimiterScale(k));
+
+    if (uniqueValues.length <= 9) {
+      scaleType = 'ordinal';
+      // colorScheme = d3.schemeBlues[Math.max(3, uniqueValues.length)];
+      colorScheme = uniqueValues.map(d => colorInterpolator((d - min) / max));
+    } else {
+      scaleType = 'sequential';
+      colorDomain = d3.extent(uniqueValues);
+    }
+  }
+
+  if (scaleType === 'ordinal') {
+    console.log('using ordinal scale');
+    colorScale = d3
+      .scaleOrdinal()
+      .domain(colorDomain)
+      .range(colorScheme);
+  } else if (scaleType === 'sequential') {
+    console.log('using linear scale', colorDomain, colorScheme);
+    colorScale = d3
+      .scaleSequential()
+      .domain(colorDomain)
+      .interpolator(colorInterpolator);
+  }
+
+  if (colorDomain.length === 0 && scaleType === 'ordinal') {
+    colorScale = d => this.rangeValues[0];
+    colorScale.range = k => {
+      if (k == null) return this.rangeValues;
+      this.rangeValues = k;
+    };
+    colorScale.domain = () => ['All'];
+    colorScale.range(['#000']);
+  }
+
+  console.log('colorDomain =', colorDomain);
+  console.log('got colorData', dataType, colorData);
+
+  if (colorScale.range && colorRangeOverrides) {
+    console.log('applying color overrides', colorRangeOverrides);
+    const newRange = colorScale.range().slice();
+    newRange.forEach((d, i) => {
+      const color = colorRangeOverrides[i];
+      if (color != null) {
+        newRange[i] = color;
+      }
+    });
+    colorScale.range(newRange);
+  }
 }
 
 function renderControls() {
@@ -130,29 +234,92 @@ function renderHighlight() {
   highlightContainer.style('transform', `translate(${x}px, ${y}px)`);
 }
 
+function colorHexString(scaleColor) {
+  const color = d3.color(scaleColor);
+  let r = color.r.toString(16);
+  r = r.length === 2 ? r : `0${r}`;
+  let g = color.g.toString(16);
+  g = g.length === 2 ? g : `0${g}`;
+  let b = color.b.toString(16);
+  b = b.length === 2 ? b : `0${b}`;
+  const colorStr = `#${r}${g}${b}`;
+  return colorStr;
+}
+
 function renderLegend() {
   /** Legend */
   const legendContainer = rootContainer.select('.legend').empty()
     ? rootContainer.append('div').attr('class', 'legend')
     : rootContainer.select('.legend');
 
+  const colorItems = colorScale.domain();
   const legendBinding = legendContainer
     .selectAll('.legend-item')
-    .data(colorScale.domain());
+    .data(colorItems);
   legendBinding.exit().remove();
   const legendEntering = legendBinding
     .enter()
     .append('span')
     .attr('class', 'legend-item')
-    .html(' tessssst');
-  legendEntering
+    .each(function(d, i) {
+      const root = d3.select(this);
+      // root.selectAll('*').remove();
+
+      const colorStr = colorHexString(colorScale(d));
+
+      root
+        .append('input')
+        .attr('class', 'legend-item-input')
+        .attr('type', 'color')
+        .property('value', colorStr)
+        .on('change', function() {
+          console.log(this.value, d, i);
+          colorRangeOverrides[i] = this.value;
+          render();
+        });
+
+      root
+        .append('span')
+        .attr('class', 'legend-swatch')
+        .style('background', colorStr);
+      root
+        .append('span')
+        .attr('class', 'legend-item-label')
+        .text(d);
+    });
+
+  const legendUpdating = legendEntering
     .merge(legendBinding)
-    .html(
-      d =>
-        `<span class='legend-swatch' style='background: ${colorScale(
-          d
-        )}'></span><span class='legend-item-label'>${d}</span> `
-    );
+    .classed('can-override', !!colorScale.range)
+    .classed('no-override', !colorScale.range);
+
+  legendUpdating
+    .select('input')
+    .property('value', d => colorHexString(colorScale(d)));
+  legendUpdating.select('.legend-item-label').text(d => d);
+  legendUpdating
+    .select('.legend-swatch')
+    .style('background', d => colorHexString(colorScale(d)));
+
+  const resetColorsBtn = legendContainer.select('.reset-colors-btn').empty()
+    ? legendContainer
+        .append('button')
+        .attr('class', 'reset-colors-btn')
+        .style('display', 'none')
+        .on('click', () => {
+          colorRangeOverrides = [];
+          render();
+        })
+        .text('Reset Colors')
+    : legendContainer.select('.reset-colors-btn');
+
+  if (colorRangeOverrides.filter(d => d != null).length) {
+    resetColorsBtn.style('display', '');
+  } else {
+    resetColorsBtn.style('display', 'none');
+  }
+
+  resetColorsBtn.raise();
 }
 
 function renderTree() {
@@ -347,20 +514,6 @@ function treeFromCsvTextArea() {
     treeFromCsvTextArea();
     render();
   });
-
-  const colorDomain = rootNode
-    .descendants()
-    .map(d => d.data[colorKey])
-    .filter((d, i, a) => a.indexOf(d) === i)
-    .sort();
-
-  let scheme = d3.schemeSet1;
-  if (colorDomain.length === 1) {
-    scheme = ['#000'];
-  }
-  colorScale = d3.scaleOrdinal(scheme).domain(colorDomain);
-  console.log('colorDomain', colorDomain);
-  console.log('colorScale', colorScale);
 }
 
 treeFromCsvTextArea();
