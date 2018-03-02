@@ -7,7 +7,7 @@ let specialKey = 'Is_Influencer';
 const specialSizeFactor = 1.6;
 let colorScale = d3.scaleOrdinal();
 let highlightNode = null;
-let colorRangeOverrides = ['red'];
+let colorRangeOverrides = [];
 let darkMode = false;
 
 const queryParams = window.location.search
